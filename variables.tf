@@ -247,3 +247,9 @@ locals {
     token_store_enabled = true
   }, var.auth)
 }
+
+variable "health_check_path" {
+  type        = string
+  default     = null
+  description = "HTTP path used by App Service Health Check."
+}
