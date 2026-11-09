@@ -253,3 +253,9 @@ variable "health_check_path" {
   default     = null
   description = "HTTP path used by App Service Health Check."
 }
+
+variable "allowed_backend_subnet_id" {
+  description = "Optional backend subnet allowed to access the app."
+  type        = string
+  default     = null
+}

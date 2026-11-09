@@ -35,8 +35,38 @@ resource "azurerm_app_service" "main" {
     app_command_line  = var.command
     ftps_state        = var.ftps_state
     health_check_path = var.health_check_path
-    ip_restriction    = local.ip_restrictions
-    linux_fx_version  = local.linux_fx_version
+
+    # Keep SCM/Kudu access restrictions separate from the main site.
+    scm_use_main_ip_restriction = false
+
+    # Allow the backend subnet when provided.
+    dynamic "ip_restriction" {
+      for_each = var.allowed_backend_subnet_id == null ? [] : [
+        var.allowed_backend_subnet_id
+      ]
+
+      content {
+        name                      = "allow-backends-vnet"
+        priority                  = 100
+        action                    = "Allow"
+        virtual_network_subnet_id = ip_restriction.value
+      }
+    }
+
+    # Allow public IP ranges provided by the calling project.
+    dynamic "ip_restriction" {
+      for_each = var.ip_restrictions
+
+      content {
+        name       = "allow-external-${ip_restriction.key}"
+        priority   = 200 + ip_restriction.key
+        action     = "Allow"
+        ip_address = ip_restriction.value
+
+      }
+    }
+
+    linux_fx_version = local.linux_fx_version
 
     use_32_bit_worker_process = local.use_32_bit_worker_process
   }
